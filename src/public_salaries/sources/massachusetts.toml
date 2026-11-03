@@ -1,0 +1,23 @@
+name = "Massachusetts"
+slug = "massachusetts"
+employer = "Commonwealth of Massachusetts"
+portal = "socrata"
+host = "cthru.data.socrata.com"
+dataset = "9ttk-7vz6"
+source_url = "https://cthru.data.socrata.com/d/9ttk-7vz6"
+license = "check on portal page"
+# Calendar years; 2009 holds only 30,553 rows, so start at 2010. Read 2026-11-03.
+years = [2010, 2026]
+
+[columns]  # our column = source column
+# This file numbers its own rows, so no :id trick.
+source_id = "id"
+year = "year"
+name = ["name_first", "name_last"]
+title = "position_title"
+department = "department_division"
+base_pay = "pay_base_actual"
+overtime_pay = "pay_overtime_actual"
+# Buyouts (unused leave paid out) count in total_pay only.
+other_pay = "pay_other_actual"
+total_pay = "pay_total_actual"

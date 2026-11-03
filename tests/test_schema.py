@@ -35,7 +35,7 @@ def test_sf_keeps_its_own_total():
 
 
 def test_every_source_file_has_the_required_keys():
-    assert sources.slugs() == ["new_york", "san_francisco"]
+    assert sources.slugs() == ["massachusetts", "new_york", "san_francisco"]
     for slug in sources.slugs():
         source = sources.load(slug)
         assert source["slug"] == slug
