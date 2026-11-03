@@ -16,7 +16,7 @@ class Salary:
     total_pay: float | None
 
 
-COLUMNS = tuple(f.name for f in fields(Salary))
+COLUMNS = tuple(field.name for field in fields(Salary))
 
 
 def parse_money(value: str | float | None) -> float | None:
@@ -59,7 +59,7 @@ def total_or_sum(given: float | None, *parts: float | None) -> float | None:
 
     if given is not None:
         return given
-    present = [p for p in parts if p is not None]
+    present = [part for part in parts if part is not None]
     return round(sum(present), 2) if present else None
 
 

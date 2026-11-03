@@ -1,7 +1,6 @@
 """Public employee pay from many US states, cities and universities in one schema."""
 
+from public_salaries.cli import main
+
 __version__ = "0.1.0"
-
-
-def main() -> None:
-    print(f"public-salaries {__version__}")
+__all__ = ["main"]

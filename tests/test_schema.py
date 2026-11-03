@@ -30,7 +30,7 @@ def test_nyc_total_is_the_sum_of_its_parts():
 def test_sf_keeps_its_own_total():
     pay = [to_salary(sources.load("san_francisco"), row) for row in rows("sf")]
     assert pay[2].total_pay == 98986.87
-    assert {p.year for p in pay} == {2025}
+    assert {salary.year for salary in pay} == {2025}
     assert len(COLUMNS) == 11
 
 

@@ -17,6 +17,7 @@ def resource_url(host: str, dataset: str) -> str:
 
 def read(host: str, dataset: str, where: str, select: str = "*") -> Iterator[dict]:
     offset = 0
+
     while True:
         params = {
             "$select": select,
@@ -27,6 +28,7 @@ def read(host: str, dataset: str, where: str, select: str = "*") -> Iterator[dic
         }
         page = get_json(resource_url(host, dataset), params, auth_headers())
         yield from page
+
         if len(page) < PAGE_SIZE:
             return
         offset += PAGE_SIZE

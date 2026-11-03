@@ -6,9 +6,9 @@ SOURCE_DIR = files("public_salaries") / "sources"
 
 def slugs() -> list[str]:
     return sorted(
-        p.name.removesuffix(".toml")
-        for p in SOURCE_DIR.iterdir()
-        if p.name.endswith(".toml")
+        path.name.removesuffix(".toml")
+        for path in SOURCE_DIR.iterdir()
+        if path.name.endswith(".toml")
     )
 
 

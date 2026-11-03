@@ -65,10 +65,12 @@ def get_json(url: str, params: dict[str, str], headers: dict[str, str]) -> Any:
                 break
             time.sleep(retry_delay(response, attempt))
         attempt += 1
+
     if response.is_error:
         raise RuntimeError(
             f"{response.status_code} from {response.url}: {response.text[:300]}"
         )
+
     try:
         return response.json()
     except ValueError as error:

@@ -31,6 +31,7 @@ def fetch_year(
     rows = PORTALS[source["portal"]].read_year(source, year)
     before = len(skipped)
     salaries = list(parse_rows(source, rows, skipped))
+
     # ponytail: the current year is still being paid, so it is re-read every fetch.
     settled = year < date.today().year and len(skipped) == before and bool(salaries)
     return cache.save_year(conn, source["slug"], year, salaries, settled)
@@ -43,6 +44,7 @@ def fetch(
     source = sources.load(slug)
     fetched = 0
     skipped: list[str] = []
+
     for year in years:
         if cache.is_fetched(conn, slug, year):
             continue

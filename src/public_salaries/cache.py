@@ -34,8 +34,9 @@ def save_year(
     settled: bool,
 ) -> int:
     """Replace one source's year; :id can change when a portal republishes."""
-    rows = [astuple(s) for s in salaries]
+    rows = [astuple(salary) for salary in salaries]
     marks = ", ".join("?" for _ in COLUMNS)
+
     with conn:
         conn.execute(
             "DELETE FROM salaries WHERE source = ? AND year = ?", (source, year)
@@ -52,3 +53,17 @@ def save_year(
 def is_fetched(conn: sqlite3.Connection, source: str, year: int) -> bool:
     query = "SELECT 1 FROM fetched_years WHERE source = ? AND year = ?"
     return conn.execute(query, (source, year)).fetchone() is not None
+
+
+STATS_QUERY = """
+SELECT source, count(*), min(year), max(year), avg(total_pay IS NOT NULL)
+FROM salaries GROUP BY source ORDER BY source
+"""
+STATS_COLUMNS = ("source", "rows", "first_year", "last_year", "with_total")
+
+
+def source_stats(conn: sqlite3.Connection) -> list[dict]:
+    """Rows, year range and the share with a total pay, per source."""
+    return [
+        dict(zip(STATS_COLUMNS, row, strict=True)) for row in conn.execute(STATS_QUERY)
+    ]
