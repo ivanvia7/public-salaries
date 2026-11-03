@@ -1,8 +1,9 @@
 import argparse
 from importlib.metadata import version
+from importlib.util import find_spec
 from pathlib import Path
 
-from public_salaries import api, cache, sources
+from public_salaries import api, cache, export, sources
 
 
 def parse_years(text: str) -> list[int]:
@@ -26,6 +27,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--years", required=True, type=parse_years, help="2024 or 2020-2024"
     )
     fetch.add_argument("--cache", type=Path, default=api.default_cache_path())
+    fetch.add_argument(
+        "--out", type=Path, help="write the rows to .csv, .jsonl, .db or .parquet"
+    )
     fetch.set_defaults(run=fetch_command)
 
     stats = commands.add_parser("stats", help="rows and years per cached source")
@@ -45,6 +49,8 @@ def fetch_command(parser: argparse.ArgumentParser, args: argparse.Namespace) -> 
     unknown = sorted(set(slugs) - set(known))
     if unknown:
         parser.error(f"unknown source {', '.join(unknown)}; known: {', '.join(known)}")
+    if args.out:
+        check_out(parser, args)
 
     conn = cache.open_cache(args.cache)
     for slug in slugs:
@@ -52,6 +58,22 @@ def fetch_command(parser: argparse.ArgumentParser, args: argparse.Namespace) -> 
         print(f"{slug}: {rows} rows read, {len(skipped)} unreadable rows skipped")
         if skipped:
             print(f"  first skipped: {skipped[0][:300]}")
+
+    if args.out:
+        count = export.export(conn, slugs, args.years, args.out)
+        print(f"wrote {args.out} ({count} rows)")
+
+
+def check_out(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    """Fail before any download, not after a long fetch."""
+    if not args.out.parent.is_dir():
+        parser.error(f"--out folder {args.out.parent} does not exist")
+    if args.out.suffix not in export.WRITERS:
+        parser.error(f"--out must end with one of {', '.join(export.WRITERS)}")
+    if args.out.resolve() == args.cache.resolve():
+        parser.error("--out must not be the cache file; exporting there would erase it")
+    if args.out.suffix == ".parquet" and find_spec("duckdb") is None:
+        parser.error('.parquet needs duckdb: pip install "public-salaries[parquet]"')
 
 
 def stats_command(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
