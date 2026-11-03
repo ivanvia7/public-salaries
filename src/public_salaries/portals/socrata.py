@@ -55,3 +55,17 @@ def read_year(source: dict, year: int) -> Iterator[dict]:
     select = f"*, {source_id}" if source_id.startswith(":") else "*"
     where = year_filter(source, year)
     yield from read(source["host"], source["dataset"], where, select)
+
+
+def sample(source: dict, columns: list[str], size: int) -> list[dict]:
+    """The newest rows; the portal rejects a column it does not have."""
+    params = {
+        "$select": ", ".join(columns),
+        "$order": f"{source['columns']['year']} DESC",
+        "$limit": str(size),
+    }
+    if "where" in source:
+        params["$where"] = source["where"]
+
+    url = resource_url(source["host"], source["dataset"])
+    return get_json(url, params, auth_headers())
