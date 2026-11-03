@@ -1,0 +1,35 @@
+[project]
+name = "public-salaries"
+version = "0.1.0"
+description = "US public employee pay from many states, cities and universities in one schema"
+readme = "README.md"
+authors = [
+    { name = "ivanvia7", email = "ivanvia76@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.28.1",
+]
+
+[project.scripts]
+public-salaries = "public_salaries:main"
+
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.11"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4", "RUF", "PIE", "RET", "PTH", "PL", "N"]
+ignore = ["PLC0415", "E501", "PLR2004"]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.414",
+    "pytest>=9.2.0",
+    "respx>=0.23.1",
+    "ruff>=0.17.3",
+]
