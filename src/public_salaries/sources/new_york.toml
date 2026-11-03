@@ -1,0 +1,21 @@
+name = "New York City"
+slug = "new_york"
+employer = "City of New York"
+portal = "socrata"
+host = "data.cityofnewyork.us"
+dataset = "k397-673e"
+source_url = "https://data.cityofnewyork.us/d/k397-673e"
+license = "check on portal page"
+# First and last fiscal year on the portal, read 2026-11-03.
+years = [2014, 2026]
+
+[columns]  # our column = source column
+source_id = ":id"
+year = "fiscal_year"
+name = ["first_name", "mid_init", "last_name"]
+title = "title_description"
+department = "agency_name"
+# base_salary is a rate (per year, day or hour); this is what was paid.
+base_pay = "regular_gross_paid"
+overtime_pay = "total_ot_paid"
+other_pay = "total_other_pay"

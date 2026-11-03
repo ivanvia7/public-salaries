@@ -1,0 +1,23 @@
+name = "San Francisco"
+slug = "san_francisco"
+employer = "City and County of San Francisco"
+portal = "socrata"
+host = "data.sf.gov"
+dataset = "88g8-5mnd"
+source_url = "https://data.sf.gov/d/88g8-5mnd"
+license = "check on portal page"
+# First and last fiscal year on the portal, read 2026-11-03.
+years = [2013, 2026]
+# Every year is published twice, by calendar and by fiscal year; keep fiscal.
+where = "year_type = 'Fiscal'"
+
+[columns]  # our column = source column
+source_id = ":id"
+year = "year"
+name = "employee_identifier"
+title = "job"
+department = "department"
+base_pay = "salaries"
+overtime_pay = "overtime"
+other_pay = "other_salaries"
+total_pay = "total_salary"
