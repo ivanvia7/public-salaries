@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from public_salaries import sources
-from public_salaries.schema import COLUMNS, money, to_salary, year_of
+from public_salaries.schema import COLUMNS, parse_money, parse_year, to_salary
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -14,11 +14,11 @@ def rows(name: str) -> list[dict]:
 
 
 def test_money_and_year_helpers():
-    assert money("$95,897.00") == 95897.0
-    assert money("") is None
-    assert year_of("2025-06-30T00:00:00.000") == 2025
+    assert parse_money("$95,897.00") == 95897.0
+    assert parse_money("") is None
+    assert parse_year("2025-06-30T00:00:00.000") == 2025
     with pytest.raises(ValueError, match="unreadable"):
-        year_of("FY25")
+        parse_year("FY25")
 
 
 def test_nyc_total_is_the_sum_of_its_parts():

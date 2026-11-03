@@ -19,7 +19,7 @@ class Salary:
 COLUMNS = tuple(f.name for f in fields(Salary))
 
 
-def money(value: str | float | None) -> float | None:
+def parse_money(value: str | float | None) -> float | None:
     """'95,897.00' or '$1,200' -> a float; blank -> None."""
 
     if value in (None, ""):
@@ -27,7 +27,7 @@ def money(value: str | float | None) -> float | None:
     return float(str(value).replace("$", "").replace(",", ""))
 
 
-def year_of(value: str) -> int:
+def parse_year(value: str) -> int:
     """'2025' or '2025-06-30T00:00:00.000' -> 2025."""
 
     if not value[:4].isdigit():
@@ -54,7 +54,7 @@ def required_text(row: dict, column: str) -> str:
     return str(value)
 
 
-def total(given: float | None, *parts: float | None) -> float | None:
+def total_or_sum(given: float | None, *parts: float | None) -> float | None:
     """The source's own total; else the sum of the parts it publishes."""
 
     if given is not None:
@@ -66,23 +66,25 @@ def total(given: float | None, *parts: float | None) -> float | None:
 def to_salary(source: dict, row: dict) -> Salary:
     col = source["columns"]
 
-    def text(name: str) -> str | None:
+    def value_of(name: str) -> str | None:
         return column_text(row, col.get(name))
 
-    base = money(text("base_pay"))
-    overtime = money(text("overtime_pay"))
-    other = money(text("other_pay"))
+    base = parse_money(value_of("base_pay"))
+    overtime = parse_money(value_of("overtime_pay"))
+    other = parse_money(value_of("other_pay"))
 
     return Salary(
         source=source["slug"],
         source_id=required_text(row, col["source_id"]),
-        year=year_of(required_text(row, col["year"])),
-        employer=text("employer") or source["employer"],
-        name=text("name"),
-        title=text("title"),
-        department=text("department"),
+        year=parse_year(required_text(row, col["year"])),
+        employer=value_of("employer") or source["employer"],
+        name=value_of("name"),
+        title=value_of("title"),
+        department=value_of("department"),
         base_pay=base,
         overtime_pay=overtime,
         other_pay=other,
-        total_pay=total(money(text("total_pay")), base, overtime, other),
+        total_pay=total_or_sum(
+            parse_money(value_of("total_pay")), base, overtime, other
+        ),
     )
