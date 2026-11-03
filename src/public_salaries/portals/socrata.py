@@ -40,15 +40,6 @@ def year_filter(source: dict, year: int) -> str:
     return f"{where} AND {extra}" if extra else where
 
 
-def count_year(source: dict, year: int) -> int:
-    """Rows the portal holds for one year, counted there, not fetched."""
-    params = {"$select": "count(*) AS n", "$where": year_filter(source, year)}
-    (row,) = get_json(
-        resource_url(source["host"], source["dataset"]), params, auth_headers()
-    )
-    return int(row["n"])
-
-
 def read_year(source: dict, year: int) -> Iterator[dict]:
     # Neither city has a row id of its own; the portal's :id is asked for by name.
     source_id = source["columns"]["source_id"]

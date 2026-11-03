@@ -11,6 +11,8 @@ def parse_years(text: str) -> list[int]:
     first, _, last = text.partition("-")
     if not first.isdigit() or not (last or first).isdigit():
         raise argparse.ArgumentTypeError(f"not a year or year range: {text!r}")
+    if int(last or first) < int(first):
+        raise argparse.ArgumentTypeError(f"range runs backwards: {text!r}")
     return list(range(int(first), int(last or first) + 1))
 
 
@@ -51,10 +53,14 @@ def build_parser() -> argparse.ArgumentParser:
 def fetch_command(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     slugs = [slug.strip() for slug in args.source.split(",")]
 
-    known = sources.slugs()
-    unknown = sorted(set(slugs) - set(known))
-    if unknown:
-        parser.error(f"unknown source {', '.join(unknown)}; known: {', '.join(known)}")
+    try:
+        sources.require(slugs)
+    except ValueError as error:
+        parser.error(str(error))
+    for slug in slugs:
+        first_year = sources.load(slug)["years"][0]
+        if args.years[0] < first_year:
+            parser.error(f"{slug} publishes from {first_year}, not {args.years[0]}")
     if args.out:
         check_out(parser, args)
 
@@ -85,8 +91,10 @@ def check_out(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None
 def check_source_command(
     parser: argparse.ArgumentParser, args: argparse.Namespace
 ) -> None:
-    if args.slug not in sources.slugs():
-        parser.error(f"unknown source {args.slug}; known: {', '.join(sources.slugs())}")
+    try:
+        sources.require([args.slug])
+    except ValueError as error:
+        parser.error(str(error))
 
     try:
         rows, skipped = check.check_source(args.slug)

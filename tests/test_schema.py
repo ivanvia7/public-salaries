@@ -16,6 +16,7 @@ def rows(name: str) -> list[dict]:
 def test_money_and_year_helpers():
     assert parse_money("$95,897.00") == 95897.0
     assert parse_money("") is None
+    assert parse_money("(1,200.00)") == -1200.0
     assert parse_year("2025-06-30T00:00:00.000") == 2025
     with pytest.raises(ValueError, match="unreadable"):
         parse_year("FY25")

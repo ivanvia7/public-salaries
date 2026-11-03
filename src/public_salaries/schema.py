@@ -20,11 +20,14 @@ COLUMNS = tuple(field.name for field in fields(Salary))
 
 
 def parse_money(value: str | float | None) -> float | None:
-    """'95,897.00' or '$1,200' -> a float; blank -> None."""
+    """'95,897.00' or '$1,200' -> a float; '(1,200.00)' -> -1200.0; blank -> None."""
 
     if value in (None, ""):
         return None
-    return float(str(value).replace("$", "").replace(",", ""))
+    text = str(value).replace("$", "").replace(",", "")
+    if text.startswith("(") and text.endswith(")"):
+        return -float(text[1:-1])
+    return float(text)
 
 
 def parse_year(value: str) -> int:
@@ -64,10 +67,10 @@ def total_or_sum(given: float | None, *parts: float | None) -> float | None:
 
 
 def to_salary(source: dict, row: dict) -> Salary:
-    col = source["columns"]
+    columns = source["columns"]
 
     def value_of(name: str) -> str | None:
-        return column_text(row, col.get(name))
+        return column_text(row, columns.get(name))
 
     base = parse_money(value_of("base_pay"))
     overtime = parse_money(value_of("overtime_pay"))
@@ -75,8 +78,8 @@ def to_salary(source: dict, row: dict) -> Salary:
 
     return Salary(
         source=source["slug"],
-        source_id=required_text(row, col["source_id"]),
-        year=parse_year(required_text(row, col["year"])),
+        source_id=required_text(row, columns["source_id"]),
+        year=parse_year(required_text(row, columns["year"])),
         employer=value_of("employer") or source["employer"],
         name=value_of("name"),
         title=value_of("title"),

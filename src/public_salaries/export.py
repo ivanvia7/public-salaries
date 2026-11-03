@@ -5,7 +5,7 @@ import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 
-from public_salaries.cache import SCHEMA
+from public_salaries.cache import INSERT_SQL, SCHEMA
 from public_salaries.schema import COLUMNS
 
 PARQUET_TYPES = {
@@ -57,11 +57,10 @@ def to_jsonl(rows: Iterator[tuple], path: Path) -> int:
 def to_sqlite(rows: Iterator[tuple], path: Path) -> int:
     path.unlink(missing_ok=True)
     out = sqlite3.connect(path)
-    marks = ", ".join("?" for _ in COLUMNS)
 
     with out:
         out.executescript(SCHEMA)
-        count = out.executemany(f"INSERT INTO salaries VALUES ({marks})", rows).rowcount
+        count = out.executemany(INSERT_SQL, rows).rowcount
     out.close()
     return count
 

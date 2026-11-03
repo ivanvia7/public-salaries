@@ -12,8 +12,17 @@ def slugs() -> list[str]:
     )
 
 
+def require(wanted: list[str]) -> None:
+    """Raise one error naming every unknown slug and the known ones."""
+    known = slugs()
+    unknown = sorted(set(wanted) - set(known))
+    if unknown:
+        raise ValueError(
+            f"unknown source {', '.join(unknown)}; known: {', '.join(known)}"
+        )
+
+
 def load(slug: str) -> dict:
+    require([slug])
     path = SOURCE_DIR / f"{slug}.toml"
-    if not path.is_file():
-        raise ValueError(f"unknown source {slug!r}; known: {', '.join(slugs())}")
     return tomllib.loads(path.read_text(encoding="utf-8"))

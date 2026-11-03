@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS fetched_years (
     PRIMARY KEY (source, year)
 );
 """
+INSERT_SQL = (
+    f"INSERT OR REPLACE INTO salaries VALUES ({', '.join('?' for _ in COLUMNS)})"
+)
 
 
 def open_cache(path: Path) -> sqlite3.Connection:
@@ -35,13 +38,12 @@ def save_year(
 ) -> int:
     """Replace one source's year; :id can change when a portal republishes."""
     rows = [astuple(salary) for salary in salaries]
-    marks = ", ".join("?" for _ in COLUMNS)
 
     with conn:
         conn.execute(
             "DELETE FROM salaries WHERE source = ? AND year = ?", (source, year)
         )
-        conn.executemany(f"INSERT OR REPLACE INTO salaries VALUES ({marks})", rows)
+        conn.executemany(INSERT_SQL, rows)
         if settled:
             conn.execute(
                 "INSERT OR REPLACE INTO fetched_years VALUES (?, ?, ?)",
