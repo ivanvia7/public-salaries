@@ -20,12 +20,12 @@ That one fetch took about 5 minutes. Median 2025 total pay: San Francisco $113,6
 ## Install
 
 ```
-pip install public-salaries
+pip install git+https://github.com/ivanvia7/public-salaries
 public-salaries fetch --source new_york,massachusetts --years 2020-2025 --out pay.csv
 public-salaries stats
 ```
 
-`--out` writes `.csv`, `.jsonl`, `.db` (SQLite) or `.parquet` (needs `pip install "public-salaries[parquet]"`).
+`--out` writes `.csv`, `.jsonl`, `.db` (SQLite) or `.parquet` (needs `pip install "public-salaries[parquet] @ git+https://github.com/ivanvia7/public-salaries"`).
 
 ## One row per person per year
 
@@ -49,7 +49,7 @@ public-salaries stats
 - New York's `base_salary` column is a rate per year, day or hour; `base_pay` uses `regular_gross_paid` instead.
 - New York fiscal 2026 has no agency names in the source, so `department` is empty for that year.
 - San Francisco publishes every year twice, by calendar and by fiscal year; only the fiscal rows are kept.
-- San Francisco publishes no names; `name` is the city's employee number.
+- San Francisco publishes names; older years carry a numeric employee id instead.
 - Massachusetts years are calendar years, from 2010. Buyouts of unused leave count in `total_pay` only.
 - The current year is read again on every fetch, because sources keep adding pay periods.
 
