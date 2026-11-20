@@ -102,8 +102,8 @@ def check(conn: sqlite3.Connection, slug: str, size: int, seed: int) -> int:
     query = "SELECT source_id FROM salaries WHERE source = ? ORDER BY source_id"
     ids = [row[0] for row in conn.execute(query, (slug,))]
     if len(ids) < size:
-        print(f"{slug}: only {len(ids)} cached rows, fetch more first")
-        return 0
+        print(f"{slug}: only {len(ids)} cached rows, fetch more or lower --size")
+        return size
 
     wrong = 0
     for source_id in random.Random(seed).sample(ids, size):
@@ -128,17 +128,21 @@ def check(conn: sqlite3.Connection, slug: str, size: int, seed: int) -> int:
     return wrong
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--cache", type=Path, default=default_cache_path())
     parser.add_argument("--size", type=int, default=80)
     parser.add_argument("--seed", type=int, default=20261120)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
+    if not args.cache.is_file():
+        raise SystemExit(f"no cache at {args.cache}; run fetch first")
     conn = sqlite3.connect(args.cache)
     conn.row_factory = sqlite3.Row
     cached = [row[0] for row in conn.execute("SELECT DISTINCT source FROM salaries")]
     slugs = sorted(slug for slug in cached if slug in PORTALS)
+    if not slugs:
+        raise SystemExit(f"{args.cache} holds no rows from a known source")
     wrong = sum(check(conn, slug, args.size, args.seed) for slug in slugs)
     raise SystemExit(1 if wrong else 0)
 

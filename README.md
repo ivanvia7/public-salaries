@@ -78,9 +78,9 @@ The cache lives at `~/.cache/public-salaries/cache.db` (or under `$XDG_CACHE_HOM
 
 ## Checked against the portals
 
-`uv run scripts/verify_sample.py` takes 80 random cached rows per source and reads each one again from its portal. It builds the expected values from the raw portal columns, without this tool's mapping, and compares year, name, title, department and the four pay fields. On 2026-11-20, with seed 20261120 over 2020-2025, all 240 rows matched. That bounds the row error rate below about 1.2%, not at zero.
+`uv run scripts/verify_sample.py` takes 80 random cached rows per source and reads each one again from its portal. It builds the expected values from the raw portal columns, without this tool's mapping, and compares year, name, title, department and the four pay fields. On 2026-11-20, with seed 20261120 over 2020-2025, all 240 rows matched. With no error in 240 rows, the error rate is below 1.25% at 95% confidence, not zero.
 
-A weekly GitHub Action runs `check-source` on every source, so a renamed portal column fails within a week.
+A weekly GitHub Action runs `check-source` on every source, so a renamed portal column shows up as a failed run. GitHub pauses scheduled runs after 60 days with no commits; run it by hand from the Actions tab then.
 
 ## Add a source
 
