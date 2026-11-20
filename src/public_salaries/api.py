@@ -29,27 +29,30 @@ def fetch_year(
     conn: sqlite3.Connection, source: dict, year: int, skipped: list[str]
 ) -> int:
     rows = PORTALS[source["portal"]].read_year(source, year)
-    before = len(skipped)
     salaries = list(parse_rows(source, rows, skipped))
 
-    # ponytail: the current year is still being paid, so it is re-read every fetch.
-    settled = year < date.today().year and len(skipped) == before and bool(salaries)
+    # The current year is still being paid, so it is read again on every fetch.
+    settled = year < date.today().year and not skipped and bool(salaries)
     return cache.save_year(conn, source["slug"], year, salaries, settled)
 
 
 def fetch(
-    conn: sqlite3.Connection, slug: str, years: Iterable[int]
-) -> tuple[int, list[str]]:
-    """Fetch every year not already cached; returns rows saved and rows skipped."""
+    conn: sqlite3.Connection, slug: str, years: Iterable[int], refresh: bool = False
+) -> Iterator[tuple[int, int | None, list[str]]]:
+    """Per year: rows saved (None when cached) and the rows skipped.
+
+    A settled year is not read again unless refresh is set, because portals
+    sometimes republish an old year.
+    """
     source = sources.load(slug)
-    fetched = 0
-    skipped: list[str] = []
 
     for year in years:
-        if cache.is_fetched(conn, slug, year):
+        if not refresh and cache.is_fetched(conn, slug, year):
+            yield year, None, []
             continue
+        skipped: list[str] = []
         try:
-            fetched += fetch_year(conn, source, year, skipped)
+            rows = fetch_year(conn, source, year, skipped)
         except (RuntimeError, ValueError) as error:
             raise RuntimeError(f"{slug} {year}: {error}") from error
-    return fetched, skipped
+        yield year, rows, skipped

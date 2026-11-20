@@ -1,0 +1,20 @@
+name: sources
+# Portals rename columns without notice; read 100 live rows per source weekly.
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check-source:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        source: [massachusetts, new_york, san_francisco]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync
+      - run: uv run public-salaries check-source ${{ matrix.source }}

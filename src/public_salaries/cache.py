@@ -1,4 +1,5 @@
 import sqlite3
+import statistics
 from collections.abc import Iterable
 from dataclasses import astuple
 from pathlib import Path
@@ -40,16 +41,26 @@ def save_year(
     rows = [astuple(salary) for salary in salaries]
 
     with conn:
+        # An empty reply keeps the rows already cached; it may be a portal hiccup.
+        if rows:
+            conn.execute(
+                "DELETE FROM salaries WHERE source = ? AND year = ?", (source, year)
+            )
+            conn.executemany(INSERT_SQL, rows)
+        # A refresh that comes back empty or partial must reopen the year.
         conn.execute(
-            "DELETE FROM salaries WHERE source = ? AND year = ?", (source, year)
+            "DELETE FROM fetched_years WHERE source = ? AND year = ?", (source, year)
         )
-        conn.executemany(INSERT_SQL, rows)
         if settled:
             conn.execute(
-                "INSERT OR REPLACE INTO fetched_years VALUES (?, ?, ?)",
-                (source, year, len(rows)),
+                "INSERT INTO fetched_years VALUES (?, ?, ?)", (source, year, len(rows))
             )
     return len(rows)
+
+
+def year_rows(conn: sqlite3.Connection, source: str, year: int) -> int:
+    query = "SELECT count(*) FROM salaries WHERE source = ? AND year = ?"
+    return conn.execute(query, (source, year)).fetchone()[0]
 
 
 def is_fetched(conn: sqlite3.Connection, source: str, year: int) -> bool:
@@ -69,3 +80,13 @@ def source_stats(conn: sqlite3.Connection) -> list[dict]:
     return [
         dict(zip(STATS_COLUMNS, row, strict=True)) for row in conn.execute(STATS_QUERY)
     ]
+
+
+def median_total(conn: sqlite3.Connection, source: str, year: int) -> float | None:
+    """Median total_pay of one source's year; None when no row has a total."""
+    query = (
+        "SELECT total_pay FROM salaries"
+        " WHERE source = ? AND year = ? AND total_pay IS NOT NULL"
+    )
+    totals = [row[0] for row in conn.execute(query, (source, year))]
+    return statistics.median(totals) if totals else None

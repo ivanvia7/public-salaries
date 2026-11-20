@@ -32,6 +32,9 @@ def build_parser() -> argparse.ArgumentParser:
     fetch.add_argument(
         "--out", type=Path, help="write the rows to .csv, .jsonl, .db or .parquet"
     )
+    fetch.add_argument(
+        "--refresh", action="store_true", help="read cached past years again"
+    )
     fetch.set_defaults(run=fetch_command)
 
     stats = commands.add_parser("stats", help="rows and years per cached source")
@@ -66,14 +69,28 @@ def fetch_command(parser: argparse.ArgumentParser, args: argparse.Namespace) -> 
 
     conn = cache.open_cache(args.cache)
     for slug in slugs:
-        rows, skipped = api.fetch(conn, slug, args.years)
-        print(f"{slug}: {rows} rows read, {len(skipped)} unreadable rows skipped")
-        if skipped:
-            print(f"  first skipped: {skipped[0][:300]}")
+        for year, rows, skipped in api.fetch(conn, slug, args.years, args.refresh):
+            kept = cache.year_rows(conn, slug, year) if rows == 0 else 0
+            print(year_line(slug, year, rows, skipped, kept), flush=True)
+            if skipped:
+                print(f"  first skipped: {skipped[0][:300]}")
 
     if args.out:
         count = export.export(conn, slugs, args.years, args.out)
-        print(f"wrote {args.out} ({count} rows)")
+        print(f"wrote {args.out} ({count:,} rows)")
+
+
+def year_line(
+    slug: str, year: int, rows: int | None, skipped: list[str], kept: int
+) -> str:
+    if rows is None:
+        return f"{slug} {year}: cached, --refresh reads it again"
+    if not rows and not skipped:
+        text = "no rows on the portal"
+    else:
+        text = f"{rows:,} rows read, {len(skipped)} unreadable rows skipped"
+    # Nothing readable came back, so save_year left the cached rows in place.
+    return f"{slug} {year}: {text}" + (f", kept {kept:,} cached rows" if kept else "")
 
 
 def check_out(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
@@ -107,13 +124,17 @@ def stats_command(parser: argparse.ArgumentParser, args: argparse.Namespace) -> 
     if not args.cache.is_file():
         parser.error(f"no cache at {args.cache}; run fetch first")
 
-    rows = cache.source_stats(cache.open_cache(args.cache))
+    conn = cache.open_cache(args.cache)
+    rows = cache.source_stats(conn)
     if not rows:
         print(f"{args.cache} holds no salaries")
     for row in rows:
+        median = cache.median_total(conn, row["source"], row["last_year"])
+        median_text = "no total pay" if median is None else f"${median:,.0f}"
         print(
-            f"{row['source']}: {row['rows']} rows, {row['first_year']} to"
-            f" {row['last_year']}, {row['with_total']:.1%} with total pay"
+            f"{row['source']}: {row['rows']:,} rows, {row['first_year']} to"
+            f" {row['last_year']}, {row['with_total']:.1%} with total pay,"
+            f" median {row['last_year']} total pay {median_text}"
         )
 
 
