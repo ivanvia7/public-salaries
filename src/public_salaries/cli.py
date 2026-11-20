@@ -86,10 +86,11 @@ def year_line(
     if rows is None:
         return f"{slug} {year}: cached, --refresh reads it again"
     if not rows and not skipped:
-        if kept:
-            return f"{slug} {year}: no rows on the portal, kept {kept:,} cached rows"
-        return f"{slug} {year}: no rows on the portal"
-    return f"{slug} {year}: {rows:,} rows read, {len(skipped)} unreadable rows skipped"
+        text = "no rows on the portal"
+    else:
+        text = f"{rows:,} rows read, {len(skipped)} unreadable rows skipped"
+    # Nothing readable came back, so save_year left the cached rows in place.
+    return f"{slug} {year}: {text}" + (f", kept {kept:,} cached rows" if kept else "")
 
 
 def check_out(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:

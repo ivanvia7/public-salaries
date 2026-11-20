@@ -99,3 +99,27 @@ def test_an_empty_refresh_names_the_rows_it_kept(run_cli, tmp_path):
     )
     assert code == 0
     assert out == "san_francisco 2025: no rows on the portal, kept 3 cached rows\n"
+
+
+@respx.mock
+def test_an_unreadable_refresh_names_the_rows_it_kept(run_cli, tmp_path):
+    bad = {**FIXTURE[0], "salaries": "n/a"}
+    respx.get(URL).mock(
+        side_effect=[httpx.Response(200, json=FIXTURE), httpx.Response(200, json=[bad])]
+    )
+    cache = str(tmp_path / "cache.db")
+    run_cli("fetch", "--source", "san_francisco", "--years", "2025", "--cache", cache)
+
+    _, out, _ = run_cli(
+        "fetch",
+        "--source",
+        "san_francisco",
+        "--years",
+        "2025",
+        "--cache",
+        cache,
+        "--refresh",
+    )
+    assert out.splitlines()[0] == (
+        "san_francisco 2025: 0 rows read, 1 unreadable rows skipped, kept 3 cached rows"
+    )
