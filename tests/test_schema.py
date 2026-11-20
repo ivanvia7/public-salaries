@@ -35,6 +35,27 @@ def test_sf_keeps_its_own_total():
     assert len(COLUMNS) == 11
 
 
+def test_ma_buyout_counts_in_total_only():
+    pay = [to_salary(sources.load("massachusetts"), row) for row in rows("ma")]
+    buyout = pay[0]
+    assert buyout.name == "Sherie Ridley"
+    assert buyout.title == "Maintainer III"
+    assert buyout.department == "MASSACHUSETTS MARITIME ACADEMY (MMA)"
+    assert (buyout.base_pay, buyout.overtime_pay, buyout.other_pay) == (
+        37854.73,
+        3521.49,
+        2640.00,
+    )
+    # The 8,934.73 leave buyout is in the source total, not in any part.
+    assert buyout.total_pay == 52950.95
+    assert pay[1].total_pay == 113552.37
+    assert {(salary.year, salary.source_id) for salary in pay} == {
+        (2025, "1312"),
+        (2025, "25"),
+        (2025, "53"),
+    }
+
+
 def test_every_source_file_has_the_required_keys():
     assert sources.slugs() == ["massachusetts", "new_york", "san_francisco"]
     for slug in sources.slugs():

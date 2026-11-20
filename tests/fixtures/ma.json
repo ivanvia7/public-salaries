@@ -1,0 +1,41 @@
+[
+    {
+        "id": "1312",
+        "year": "2025",
+        "name_first": "Sherie",
+        "name_last": "Ridley",
+        "department_division": "MASSACHUSETTS MARITIME ACADEMY (MMA)",
+        "position_title": "Maintainer III",
+        "pay_total_actual": "52950.95",
+        "pay_base_actual": "37854.73",
+        "pay_buyout_actual": "8934.73",
+        "pay_overtime_actual": "3521.49",
+        "pay_other_actual": "2640.00"
+    },
+    {
+        "id": "25",
+        "year": "2025",
+        "name_first": "Edward",
+        "name_last": "Diaz",
+        "department_division": "SHERIFF DEPARTMENT HAMPDEN (SDH)",
+        "position_title": "Human Resource Supervisor I",
+        "pay_total_actual": "113552.37",
+        "pay_base_actual": "105552.37",
+        "pay_buyout_actual": "0.00",
+        "pay_overtime_actual": "0.00",
+        "pay_other_actual": "8000.00"
+    },
+    {
+        "id": "53",
+        "year": "2025",
+        "name_first": "Glaucia",
+        "name_last": "Espindula-Bornstein",
+        "department_division": "DEPARTMENT OF DEVELOPMENTAL SERVICES (DMR)",
+        "position_title": "Developmental Services Wrk I",
+        "pay_total_actual": "54990.81",
+        "pay_base_actual": "52392.22",
+        "pay_buyout_actual": "0.00",
+        "pay_overtime_actual": "1630.09",
+        "pay_other_actual": "968.50"
+    }
+]
