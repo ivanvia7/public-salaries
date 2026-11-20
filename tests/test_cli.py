@@ -54,7 +54,7 @@ def test_fetch_prints_one_line_per_year(run_cli, tmp_path):
     assert code == 0
     assert out.splitlines() == [
         "san_francisco 2025: 3 rows read, 0 unreadable rows skipped",
-        "san_francisco 2026: no rows on the portal",
+        "san_francisco 2026: no rows on the portal, cache left as it was",
     ]
 
     code, out, _ = run_cli(

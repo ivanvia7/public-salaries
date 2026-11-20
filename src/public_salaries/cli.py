@@ -83,7 +83,7 @@ def year_line(slug: str, year: int, rows: int | None, skipped: list[str]) -> str
     if rows is None:
         return f"{slug} {year}: cached, --refresh reads it again"
     if not rows and not skipped:
-        return f"{slug} {year}: no rows on the portal"
+        return f"{slug} {year}: no rows on the portal, cache left as it was"
     return f"{slug} {year}: {rows:,} rows read, {len(skipped)} unreadable rows skipped"
 
 
