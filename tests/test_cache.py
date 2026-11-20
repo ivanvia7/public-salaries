@@ -26,9 +26,27 @@ def test_second_fetch_makes_no_requests(tmp_path):
     route = respx.get(URL).mock(return_value=httpx.Response(200, json=FIXTURE))
     conn = cache.open_cache(tmp_path / "cache.db")
 
-    assert api.fetch(conn, "san_francisco", [2025]) == (3, [])
-    assert api.fetch(conn, "san_francisco", [2025]) == (0, [])
+    assert list(api.fetch(conn, "san_francisco", [2025])) == [(2025, 3, [])]
+    assert list(api.fetch(conn, "san_francisco", [2025])) == [(2025, None, [])]
     assert route.call_count == 1
+
+
+@respx.mock
+def test_refresh_reads_a_settled_year_again(tmp_path):
+    route = respx.get(URL).mock(
+        side_effect=[
+            httpx.Response(200, json=FIXTURE),
+            httpx.Response(200, json=FIXTURE[:2]),
+        ]
+    )
+    conn = cache.open_cache(tmp_path / "cache.db")
+
+    list(api.fetch(conn, "san_francisco", [2025]))
+    assert list(api.fetch(conn, "san_francisco", [2025], refresh=True)) == [
+        (2025, 2, [])
+    ]
+    assert route.call_count == 2
+    assert count_rows(conn) == 2
 
 
 @respx.mock
@@ -39,8 +57,8 @@ def test_current_year_is_read_again(tmp_path):
     )
     conn = cache.open_cache(tmp_path / "cache.db")
 
-    api.fetch(conn, "san_francisco", [THIS_YEAR])
-    api.fetch(conn, "san_francisco", [THIS_YEAR])
+    list(api.fetch(conn, "san_francisco", [THIS_YEAR]))
+    list(api.fetch(conn, "san_francisco", [THIS_YEAR]))
     assert route.call_count == 2
     assert count_rows(conn) == 1
 
@@ -51,7 +69,7 @@ def test_bad_row_is_skipped_and_year_stays_open(tmp_path):
     respx.get(URL).mock(return_value=httpx.Response(200, json=[*FIXTURE, bad]))
     conn = cache.open_cache(tmp_path / "cache.db")
 
-    rows, skipped = api.fetch(conn, "san_francisco", [2025])
+    [(_, rows, skipped)] = api.fetch(conn, "san_francisco", [2025])
     assert rows == 3
     assert len(skipped) == 1
     assert skipped[0].startswith(

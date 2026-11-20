@@ -1,4 +1,5 @@
 import sqlite3
+import statistics
 from collections.abc import Iterable
 from dataclasses import astuple
 from pathlib import Path
@@ -69,3 +70,13 @@ def source_stats(conn: sqlite3.Connection) -> list[dict]:
     return [
         dict(zip(STATS_COLUMNS, row, strict=True)) for row in conn.execute(STATS_QUERY)
     ]
+
+
+def median_total(conn: sqlite3.Connection, source: str, year: int) -> float | None:
+    """Median total_pay of one source's year; None when no row has a total."""
+    query = (
+        "SELECT total_pay FROM salaries"
+        " WHERE source = ? AND year = ? AND total_pay IS NOT NULL"
+    )
+    totals = [row[0] for row in conn.execute(query, (source, year))]
+    return statistics.median(totals) if totals else None
