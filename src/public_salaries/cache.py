@@ -45,10 +45,13 @@ def save_year(
             "DELETE FROM salaries WHERE source = ? AND year = ?", (source, year)
         )
         conn.executemany(INSERT_SQL, rows)
+        # A refresh that comes back empty or partial must reopen the year.
+        conn.execute(
+            "DELETE FROM fetched_years WHERE source = ? AND year = ?", (source, year)
+        )
         if settled:
             conn.execute(
-                "INSERT OR REPLACE INTO fetched_years VALUES (?, ?, ?)",
-                (source, year, len(rows)),
+                "INSERT INTO fetched_years VALUES (?, ?, ?)", (source, year, len(rows))
             )
     return len(rows)
 

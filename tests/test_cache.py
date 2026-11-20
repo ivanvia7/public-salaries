@@ -50,6 +50,26 @@ def test_refresh_reads_a_settled_year_again(tmp_path):
 
 
 @respx.mock
+def test_an_empty_refresh_leaves_the_year_open(tmp_path):
+    route = respx.get(URL).mock(
+        side_effect=[
+            httpx.Response(200, json=FIXTURE),
+            httpx.Response(200, json=[]),
+            httpx.Response(200, json=FIXTURE),
+        ]
+    )
+    conn = cache.open_cache(tmp_path / "cache.db")
+
+    list(api.fetch(conn, "san_francisco", [2025]))
+    assert list(api.fetch(conn, "san_francisco", [2025], refresh=True)) == [
+        (2025, 0, [])
+    ]
+    assert not cache.is_fetched(conn, "san_francisco", 2025)
+    assert list(api.fetch(conn, "san_francisco", [2025])) == [(2025, 3, [])]
+    assert route.call_count == 3
+
+
+@respx.mock
 def test_current_year_is_read_again(tmp_path):
     rows = in_year(THIS_YEAR)
     route = respx.get(URL).mock(
