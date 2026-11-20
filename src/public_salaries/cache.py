@@ -58,6 +58,11 @@ def save_year(
     return len(rows)
 
 
+def year_rows(conn: sqlite3.Connection, source: str, year: int) -> int:
+    query = "SELECT count(*) FROM salaries WHERE source = ? AND year = ?"
+    return conn.execute(query, (source, year)).fetchone()[0]
+
+
 def is_fetched(conn: sqlite3.Connection, source: str, year: int) -> bool:
     query = "SELECT 1 FROM fetched_years WHERE source = ? AND year = ?"
     return conn.execute(query, (source, year)).fetchone() is not None

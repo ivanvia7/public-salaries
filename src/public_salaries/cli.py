@@ -70,7 +70,8 @@ def fetch_command(parser: argparse.ArgumentParser, args: argparse.Namespace) -> 
     conn = cache.open_cache(args.cache)
     for slug in slugs:
         for year, rows, skipped in api.fetch(conn, slug, args.years, args.refresh):
-            print(year_line(slug, year, rows, skipped), flush=True)
+            kept = cache.year_rows(conn, slug, year) if rows == 0 else 0
+            print(year_line(slug, year, rows, skipped, kept), flush=True)
             if skipped:
                 print(f"  first skipped: {skipped[0][:300]}")
 
@@ -79,11 +80,15 @@ def fetch_command(parser: argparse.ArgumentParser, args: argparse.Namespace) -> 
         print(f"wrote {args.out} ({count:,} rows)")
 
 
-def year_line(slug: str, year: int, rows: int | None, skipped: list[str]) -> str:
+def year_line(
+    slug: str, year: int, rows: int | None, skipped: list[str], kept: int
+) -> str:
     if rows is None:
         return f"{slug} {year}: cached, --refresh reads it again"
     if not rows and not skipped:
-        return f"{slug} {year}: no rows on the portal, cached rows kept"
+        if kept:
+            return f"{slug} {year}: no rows on the portal, kept {kept:,} cached rows"
+        return f"{slug} {year}: no rows on the portal"
     return f"{slug} {year}: {rows:,} rows read, {len(skipped)} unreadable rows skipped"
 
 

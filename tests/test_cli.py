@@ -54,7 +54,7 @@ def test_fetch_prints_one_line_per_year(run_cli, tmp_path):
     assert code == 0
     assert out.splitlines() == [
         "san_francisco 2025: 3 rows read, 0 unreadable rows skipped",
-        "san_francisco 2026: no rows on the portal, cached rows kept",
+        "san_francisco 2026: no rows on the portal",
     ]
 
     code, out, _ = run_cli(
@@ -77,3 +77,25 @@ def test_stats_prints_the_median_of_the_last_year(run_cli, tmp_path):
         "san_francisco: 3 rows, 2025 to 2025, 100.0% with total pay,"
         f" median 2025 total pay ${totals[1]:,.0f}\n"
     )
+
+
+@respx.mock
+def test_an_empty_refresh_names_the_rows_it_kept(run_cli, tmp_path):
+    respx.get(URL).mock(
+        side_effect=[httpx.Response(200, json=FIXTURE), httpx.Response(200, json=[])]
+    )
+    cache = str(tmp_path / "cache.db")
+    run_cli("fetch", "--source", "san_francisco", "--years", "2025", "--cache", cache)
+
+    code, out, _ = run_cli(
+        "fetch",
+        "--source",
+        "san_francisco",
+        "--years",
+        "2025",
+        "--cache",
+        cache,
+        "--refresh",
+    )
+    assert code == 0
+    assert out == "san_francisco 2025: no rows on the portal, kept 3 cached rows\n"
