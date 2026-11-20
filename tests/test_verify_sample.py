@@ -39,3 +39,18 @@ def test_an_empty_cache_is_not_a_pass(tmp_path):
 
     with pytest.raises(SystemExit, match="holds no rows"):
         verify_sample.main(["--cache", str(tmp_path / "cache.db")])
+
+
+@pytest.mark.parametrize("size", ["0", "-1"])
+def test_a_size_below_one_is_rejected(tmp_path, size):
+    with pytest.raises(SystemExit) as exit_info:
+        verify_sample.main(["--cache", str(tmp_path / "cache.db"), "--size", size])
+    assert exit_info.value.code == 2
+
+
+def test_a_file_that_is_not_a_cache_is_named(tmp_path):
+    path = tmp_path / "cache.db"
+    path.write_bytes(b"")
+
+    with pytest.raises(SystemExit, match="not a public-salaries cache"):
+        verify_sample.main(["--cache", str(path)])

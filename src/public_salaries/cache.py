@@ -41,10 +41,12 @@ def save_year(
     rows = [astuple(salary) for salary in salaries]
 
     with conn:
-        conn.execute(
-            "DELETE FROM salaries WHERE source = ? AND year = ?", (source, year)
-        )
-        conn.executemany(INSERT_SQL, rows)
+        # An empty reply keeps the rows already cached; it may be a portal hiccup.
+        if rows:
+            conn.execute(
+                "DELETE FROM salaries WHERE source = ? AND year = ?", (source, year)
+            )
+            conn.executemany(INSERT_SQL, rows)
         # A refresh that comes back empty or partial must reopen the year.
         conn.execute(
             "DELETE FROM fetched_years WHERE source = ? AND year = ?", (source, year)

@@ -134,12 +134,21 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--size", type=int, default=80)
     parser.add_argument("--seed", type=int, default=20261120)
     args = parser.parse_args(argv)
+    if args.size < 1:
+        parser.error("--size must be 1 or more")
 
     if not args.cache.is_file():
         raise SystemExit(f"no cache at {args.cache}; run fetch first")
     conn = sqlite3.connect(args.cache)
     conn.row_factory = sqlite3.Row
-    cached = [row[0] for row in conn.execute("SELECT DISTINCT source FROM salaries")]
+    try:
+        cached = [
+            row[0] for row in conn.execute("SELECT DISTINCT source FROM salaries")
+        ]
+    except sqlite3.DatabaseError as error:
+        raise SystemExit(
+            f"{args.cache} is not a public-salaries cache: {error}"
+        ) from None
     slugs = sorted(slug for slug in cached if slug in PORTALS)
     if not slugs:
         raise SystemExit(f"{args.cache} holds no rows from a known source")

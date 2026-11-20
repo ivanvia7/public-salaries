@@ -65,6 +65,7 @@ def test_an_empty_refresh_leaves_the_year_open(tmp_path):
         (2025, 0, [])
     ]
     assert not cache.is_fetched(conn, "san_francisco", 2025)
+    assert count_rows(conn) == 3
     assert list(api.fetch(conn, "san_francisco", [2025])) == [(2025, 3, [])]
     assert route.call_count == 3
 
